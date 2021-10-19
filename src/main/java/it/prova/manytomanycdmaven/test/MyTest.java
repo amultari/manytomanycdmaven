@@ -47,6 +47,8 @@ public class MyTest {
 			// *********************************************************************************
 			testRimozioneCdECheckGeneri(cdServiceInstance, genereServiceInstance);
 
+			testCascadeAllDisaster(cdServiceInstance, genereServiceInstance);
+
 			// TODO: TESTARE TUTTO IL CRUD
 
 			System.out.println(
@@ -177,6 +179,49 @@ public class MyTest {
 		Cd cdSupposedToBeRemoved = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());
 		if (cdSupposedToBeRemoved != null)
 			throw new RuntimeException("testRimozioneCdECheckGeneri fallito: rimozione non avvenuta ");
+
+		System.out.println(".......testRimozioneCdECheckGeneri fine: PASSED.............");
+	}
+
+	private static void testCascadeAllDisaster(CdService cdServiceInstance, GenereService genereServiceInstance)
+			throws Exception {
+		System.out.println(".......testCascadeAllDisaster inizio.............");
+
+		// creo due cd e due generi
+		long nowInMillisecondi = new Date().getTime();
+		Cd cdInstanceX = new Cd("titolo" + nowInMillisecondi, "autore" + nowInMillisecondi,
+				new SimpleDateFormat("dd/MM/yyyy").parse("10/08/2020"));
+		Cd cdInstanceX2 = new Cd("titolo secondo" + nowInMillisecondi, "autore secondo" + nowInMillisecondi,
+				new SimpleDateFormat("dd/MM/yyyy").parse("10/08/2020"));
+		cdServiceInstance.inserisciNuovo(cdInstanceX);
+		cdServiceInstance.inserisciNuovo(cdInstanceX2);
+		Genere genere1 = new Genere("genere" + nowInMillisecondi);
+		genereServiceInstance.inserisciNuovo(genere1);
+		Genere genere2 = new Genere("genere" + nowInMillisecondi + 1);
+		genereServiceInstance.inserisciNuovo(genere2);
+		cdServiceInstance.aggiungiGenere(cdInstanceX, genere1);
+		cdServiceInstance.aggiungiGenere(cdInstanceX, genere2);
+		cdServiceInstance.aggiungiGenere(cdInstanceX2, genere1);
+		cdServiceInstance.aggiungiGenere(cdInstanceX2, genere2);
+
+		// ricarico eager per forzare il test
+		Cd cdReloaded = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());
+		if (cdReloaded.getGeneri().size() != 2)
+			throw new RuntimeException("testCascadeAllDisaster fallito: 2 generi e cdInstanceX non collegati ");
+
+		// ricarico eager per forzare il test
+		Cd cdReloaded2 = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX2.getId());
+		if (cdReloaded2.getGeneri().size() != 2)
+			throw new RuntimeException("testCascadeAllDisaster fallito: 2 generi e cdInstanceX2 non collegati ");
+
+		// rimuovo il primo
+		cdServiceInstance.rimuovi(cdReloaded);
+
+		// il secondo deve risultare ancora associato e invece FALLISCE!!!! Se rimetto il cascade a Merge e Persist funziona di nuovo
+		cdReloaded2 = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX2.getId());
+		if (cdReloaded2.getGeneri().size() != 2)
+			throw new RuntimeException(
+					"testCascadeAllDisaster fallito causa disastro sulla REMOVE: 2 generi e cdInstanceX2 non collegati ");
 
 		System.out.println(".......testRimozioneCdECheckGeneri fine: PASSED.............");
 	}
