@@ -56,7 +56,7 @@ public class MyTest {
 			System.out.println("In tabella Genere ci sono " + genereServiceInstance.listAll().size() + " elementi.");
 			System.out.println("In tabella Cd ci sono " + cdServiceInstance.listAll().size() + " elementi.");
 
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {
 			// questa è necessaria per chiudere tutte le connessioni quindi rilasciare il
