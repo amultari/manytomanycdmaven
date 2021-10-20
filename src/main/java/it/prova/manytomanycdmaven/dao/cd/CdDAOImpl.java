@@ -58,4 +58,12 @@ public class CdDAOImpl implements CdDAO {
 		return query.getResultList().stream().findFirst().orElse(null);
 	}
 
+	@Override
+	public List<String> loadListaDescrizioneGeneriAssociateAdUnCd(Long idCdInput) throws Exception {
+		TypedQuery<String> query = entityManager
+				.createQuery("select g.descrizione FROM Genere g left join g.cds cd where cd.id = :idCd", String.class);
+		query.setParameter("idCd", idCdInput);
+		return query.getResultList();
+	}
+
 }

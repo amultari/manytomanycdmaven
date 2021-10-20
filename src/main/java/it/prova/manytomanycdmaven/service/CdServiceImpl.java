@@ -232,4 +232,20 @@ public class CdServiceImpl implements CdService {
 
 	}
 
+	@Override
+	public List<String> estraiListaDescrizioneGeneriAssociateAdUnCd(Long idCdInput) throws Exception {
+		EntityManager entityManager = EntityManagerUtil.getEntityManager();
+
+		try {
+			cdDAO.setEntityManager(entityManager);
+
+			return cdDAO.loadListaDescrizioneGeneriAssociateAdUnCd(idCdInput);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		} finally {
+			EntityManagerUtil.closeEntityManager(entityManager);
+		}
+	}
+
 }

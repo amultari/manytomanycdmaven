@@ -1,7 +1,9 @@
 package it.prova.manytomanycdmaven.test;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import it.prova.manytomanycdmaven.dao.EntityManagerUtil;
 import it.prova.manytomanycdmaven.model.Cd;
@@ -32,6 +34,8 @@ public class MyTest {
 			testCollegaGenereACd(cdServiceInstance, genereServiceInstance);
 
 			testCreazioneECollegamentoCdInUnSoloColpo(cdServiceInstance, genereServiceInstance);
+
+			testEstraiListaDescrizioneGeneriAssociateAdUnCd(cdServiceInstance, genereServiceInstance);
 
 			// *********************************************************************************
 			// RIMUOVIAMO UN CD E VEDIAMO COSA ACCADE AI GENERI
@@ -179,6 +183,50 @@ public class MyTest {
 			throw new RuntimeException("testRimozioneCdECheckGeneri fallito: rimozione non avvenuta ");
 
 		System.out.println(".......testRimozioneCdECheckGeneri fine: PASSED.............");
+	}
+
+	private static void testEstraiListaDescrizioneGeneriAssociateAdUnCd(CdService cdServiceInstance,
+			GenereService genereServiceInstance) throws Exception {
+		System.out.println(".......testEstraiListaDescrizioneGeneriAssociateAdUnCd inizio.............");
+
+		// creo un cd e tre generi
+		long nowInMillisecondi = new Date().getTime();
+		Cd cdInstanceX = new Cd("titolo" + nowInMillisecondi, "autore" + nowInMillisecondi,
+				new SimpleDateFormat("dd/MM/yyyy").parse("10/08/2020"));
+		cdServiceInstance.inserisciNuovo(cdInstanceX);
+		Genere genere1 = new Genere("genere" + nowInMillisecondi);
+		genereServiceInstance.inserisciNuovo(genere1);
+		Genere genere2 = new Genere("genere" + nowInMillisecondi + 1);
+		genereServiceInstance.inserisciNuovo(genere2);
+		Genere genere3 = new Genere("genere" + nowInMillisecondi + 2);
+		genereServiceInstance.inserisciNuovo(genere3);
+		cdServiceInstance.aggiungiGenere(cdInstanceX, genere1);
+		cdServiceInstance.aggiungiGenere(cdInstanceX, genere2);
+		cdServiceInstance.aggiungiGenere(cdInstanceX, genere3);
+
+		// ricarico eager per forzare il test
+		Cd cdReloaded = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());
+		if (cdReloaded.getGeneri().size() != 3)
+			throw new RuntimeException(
+					"testEstraiListaDescrizioneGeneriAssociateAdUnCd fallito: 2 generi e cd non collegati ");
+
+		// vediamo se estrae 3 descrizioni
+		List<String> listaGeneriAssociatiAlCdReloaded = cdServiceInstance
+				.estraiListaDescrizioneGeneriAssociateAdUnCd(cdReloaded.getId());
+		if (listaGeneriAssociatiAlCdReloaded == null || listaGeneriAssociatiAlCdReloaded.isEmpty()
+				|| listaGeneriAssociatiAlCdReloaded.size() != 3)
+			throw new RuntimeException(
+					"testEstraiListaDescrizioneGeneriAssociateAdUnCd fallito: nessuna descrizione caricata ");
+
+		// adesso un test più stringente
+		for (String descrizioneItem : Arrays.asList(genere1.getDescrizione(), genere2.getDescrizione(),
+				genere3.getDescrizione())) {
+			if (!listaGeneriAssociatiAlCdReloaded.contains(descrizioneItem))
+				throw new RuntimeException("testEstraiListaDescrizioneGeneriAssociateAdUnCd fallito: descrizione "
+						+ descrizioneItem + " non contenuta nella lista estratta");
+		}
+
+		System.out.println(".......testEstraiListaDescrizioneGeneriAssociateAdUnCd fine: PASSED.............");
 	}
 
 }

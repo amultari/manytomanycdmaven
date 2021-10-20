@@ -23,6 +23,8 @@ public interface CdService {
 	public void aggiungiGenere(Cd cdInstance, Genere genereInstance) throws Exception;
 	
 	public void creaECollegaCdEGenere(Cd cdTransientInstance, Genere genereTransientInstance) throws Exception;
+	
+	public List<String> estraiListaDescrizioneGeneriAssociateAdUnCd(Long idCdInput) throws Exception;
 
 	// per injection
 	public void setCdDAO(CdDAO cdDAO);
