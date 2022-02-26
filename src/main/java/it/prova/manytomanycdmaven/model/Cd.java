@@ -1,6 +1,7 @@
 package it.prova.manytomanycdmaven.model;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,6 +18,9 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "cd")
 public class Cd {
@@ -32,12 +36,19 @@ public class Cd {
 	@Column(name = "datapubblicazione")
 	private Date dataPubblicazione;
 
+	// campi per le time info del record
+	@CreationTimestamp
+	private LocalDateTime createDateTime;
+	@UpdateTimestamp
+	private LocalDateTime updateDateTime;
+
 	@ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
 	@JoinTable(name = "cd_genere", joinColumns = @JoinColumn(name = "cd_id", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "genere_id", referencedColumnName = "ID"))
 	private Set<Genere> generi = new HashSet<Genere>();
-	
-	public Cd() {}
-	
+
+	public Cd() {
+	}
+
 	public Cd(String titolo, String autore, Date dataPubblicazione) {
 		this.titolo = titolo;
 		this.autore = autore;
@@ -76,6 +87,22 @@ public class Cd {
 		this.dataPubblicazione = dataPubblicazione;
 	}
 
+	public LocalDateTime getCreateDateTime() {
+		return createDateTime;
+	}
+
+	public void setCreateDateTime(LocalDateTime createDateTime) {
+		this.createDateTime = createDateTime;
+	}
+
+	public LocalDateTime getUpdateDateTime() {
+		return updateDateTime;
+	}
+
+	public void setUpdateDateTime(LocalDateTime updateDateTime) {
+		this.updateDateTime = updateDateTime;
+	}
+
 	public Set<Genere> getGeneri() {
 		return generi;
 	}
@@ -86,18 +113,21 @@ public class Cd {
 
 	@Override
 	public String toString() {
-		String dataPubblicazioneString = dataPubblicazione!=null?new SimpleDateFormat("dd/MM/yyyy").format(dataPubblicazione):" N.D.";
-		
-		return "Cd [id=" + id + ", titolo=" + titolo + ", autore=" + autore + ", dataPubblicazione=" + dataPubblicazioneString
-				+ "]";
+		String dataPubblicazioneString = dataPubblicazione != null
+				? new SimpleDateFormat("dd/MM/yyyy").format(dataPubblicazione)
+				: " N.D.";
+
+		return "Cd [id=" + id + ", titolo=" + titolo + ", autore=" + autore + ", dataPubblicazione="
+				+ dataPubblicazioneString + "]";
 	}
-	
-	//questi due metodi servirebbero nel caso in cui non vi fossero i Cascade in alto (v. creaECollegaCdEGenere di CdServiceImpl)
+
+	// questi due metodi servirebbero nel caso in cui non vi fossero i Cascade in
+	// alto (v. creaECollegaCdEGenere di CdServiceImpl)
 	public void addToGeneri(Genere genereInstance) {
 		this.generi.add(genereInstance);
 		genereInstance.getCds().add(this);
 	}
-	
+
 	public void removeFromGeneri(Genere genereInstance) {
 		this.generi.remove(genereInstance);
 		genereInstance.getCds().remove(this);

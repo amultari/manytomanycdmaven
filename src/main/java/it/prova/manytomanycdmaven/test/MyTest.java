@@ -1,6 +1,7 @@
 package it.prova.manytomanycdmaven.test;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -28,6 +29,8 @@ public class MyTest {
 					"*************************************************************************************************");
 
 			testInserimentoNuovoCd(cdServiceInstance);
+
+			testModificaECheckDateCd(cdServiceInstance);
 
 			testInserimentoNuovoGenereERicercaPerDescrizione(genereServiceInstance);
 
@@ -79,6 +82,44 @@ public class MyTest {
 			throw new RuntimeException("testInserimentoNuovoCd fallito ");
 
 		System.out.println(".......testInserimentoNuovoCd fine: PASSED.............");
+	}
+
+	private static void testModificaECheckDateCd(CdService cdServiceInstance) throws Exception {
+		System.out.println(".......testModificaECheckDateCd inizio.............");
+
+		Cd cdInstance = new Cd("titolo23", "autore211", new SimpleDateFormat("dd/MM/yyyy").parse("24/09/2021"));
+		cdServiceInstance.inserisciNuovo(cdInstance);
+		if (cdInstance.getId() == null)
+			throw new RuntimeException("testModificaECheckDateCd fallito ");
+
+		// ora mi salvo da parte le date di creazione ed update
+		LocalDateTime createDateTimeIniziale = cdInstance.getCreateDateTime();
+		LocalDateTime updateDateTimeIniziale = cdInstance.getUpdateDateTime();
+
+		// **************************************************************************************************
+		// **************************************************************************************************
+		// all'inizio DOVREBBERO essere uguali, infatti a volte non lo sono per
+		// questione di 10^-4 secondi
+		// soluzione: riprovare!!! Se diventa sistematico commentare le due righe
+		// successive
+		if (!createDateTimeIniziale.equals(updateDateTimeIniziale))
+			throw new RuntimeException("testModificaECheckDateCd fallito: le date non coincidono ");
+		// **************************************************************************************************
+		// **************************************************************************************************
+
+		// ora modifico il record
+		cdInstance.setAutore("Mio nuovo autore");
+		cdServiceInstance.aggiorna(cdInstance);
+
+		// se la nuova data aggiornamento risulta precedente a quella iniziale: errore
+		if (cdInstance.getUpdateDateTime().isAfter(updateDateTimeIniziale))
+			throw new RuntimeException("testModificaECheckDateCd fallito: le date di modifica sono disallineate ");
+
+		// la data creazione deve essere uguale a quella di prima
+		if (!cdInstance.getCreateDateTime().equals(createDateTimeIniziale))
+			throw new RuntimeException("testModificaECheckDateCd fallito: la data di creazione è cambiata ");
+
+		System.out.println(".......testModificaECheckDateCd fine: PASSED.............");
 	}
 
 	private static void testInserimentoNuovoGenereERicercaPerDescrizione(GenereService genereServiceInstance)
