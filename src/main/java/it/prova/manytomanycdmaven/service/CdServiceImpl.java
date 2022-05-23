@@ -128,7 +128,7 @@ public class CdServiceImpl implements CdService {
 	}
 
 	@Override
-	public void rimuovi(Cd cdInstance) throws Exception {
+	public void rimuovi(Long idCd) throws Exception {
 		// questo è come una connection
 		EntityManager entityManager = EntityManagerUtil.getEntityManager();
 
@@ -140,7 +140,7 @@ public class CdServiceImpl implements CdService {
 			cdDAO.setEntityManager(entityManager);
 
 			// eseguo quello che realmente devo fare
-			cdDAO.delete(cdInstance);
+			cdDAO.delete(cdDAO.get(idCd));
 
 			entityManager.getTransaction().commit();
 		} catch (Exception e) {

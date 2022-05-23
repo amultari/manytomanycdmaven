@@ -216,7 +216,7 @@ public class MyTest {
 			throw new RuntimeException("testRimozioneCdECheckGeneri fallito: 2 generi e cd non collegati ");
 
 		// rimuovo
-		cdServiceInstance.rimuovi(cdReloaded);
+		cdServiceInstance.rimuovi(cdReloaded.getId());
 
 		// ricarico
 		Cd cdSupposedToBeRemoved = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());

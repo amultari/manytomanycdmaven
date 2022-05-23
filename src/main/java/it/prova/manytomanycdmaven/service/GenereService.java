@@ -16,7 +16,7 @@ public interface GenereService {
 
 	public void inserisciNuovo(Genere genereInstance) throws Exception;
 
-	public void rimuovi(Genere genereInstance) throws Exception;
+	public void rimuovi(Long idGenere) throws Exception;
 
 	public void aggiungiCd(Genere genereInstance, Cd cdInstance) throws Exception;
 	

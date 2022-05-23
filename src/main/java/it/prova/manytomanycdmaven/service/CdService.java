@@ -18,7 +18,7 @@ public interface CdService {
 
 	public void inserisciNuovo(Cd cdInstance) throws Exception;
 
-	public void rimuovi(Cd cdInstance) throws Exception;
+	public void rimuovi(Long idCd) throws Exception;
 
 	public void aggiungiGenere(Cd cdInstance, Genere genereInstance) throws Exception;
 	

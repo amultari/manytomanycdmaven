@@ -103,7 +103,7 @@ public class GenereServiceImpl implements GenereService {
 	}
 
 	@Override
-	public void rimuovi(Genere genereInstance) throws Exception {
+	public void rimuovi(Long idGenere) throws Exception {
 		// questo è come una connection
 		EntityManager entityManager = EntityManagerUtil.getEntityManager();
 
@@ -115,7 +115,7 @@ public class GenereServiceImpl implements GenereService {
 			genereDAO.setEntityManager(entityManager);
 
 			// eseguo quello che realmente devo fare
-			genereDAO.delete(genereInstance);
+			genereDAO.delete(genereDAO.get(idGenere));
 
 			entityManager.getTransaction().commit();
 		} catch (Exception e) {
