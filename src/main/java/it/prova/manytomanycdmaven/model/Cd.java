@@ -42,7 +42,7 @@ public class Cd {
 	@UpdateTimestamp
 	private LocalDateTime updateDateTime;
 
-	@ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
+	@ManyToMany(cascade = { CascadeType.ALL }, fetch = FetchType.LAZY)
 	@JoinTable(name = "cd_genere", joinColumns = @JoinColumn(name = "cd_id", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "genere_id", referencedColumnName = "ID"))
 	private Set<Genere> generi = new HashSet<Genere>();
 
