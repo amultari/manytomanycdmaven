@@ -48,11 +48,16 @@ public class MyTest {
 			// il risultato atteso è la rimozione dalla tabella cd, la rimozione dalla
 			// tabella
 			// di legame lasciando inalterate le voci nella tabella genere. Tutto ciò
-			// a prescindere della presenza dei Cascade. Se mettiamo CascadeType.ALL o
+			// a prescindere della presenza dei Cascade (funziona in quanto cd risulta
+			// owner della relatzione). Se mettiamo CascadeType.ALL o
 			// REMOVE...
-			// DISASTRO!!!
+			// DISASTRO!!! Perché prova a rimuovere anche i generi collegati!!!
 			// *********************************************************************************
 			testRimozioneCdECheckGeneri(cdServiceInstance, genereServiceInstance);
+			
+			//questo usa direttamente sql nativo che in moltissimi casi risulta la strategia migliore,
+			//più performante, esente da problemi di query sovrabbondanti
+			testRimozioneCdECheckGeneriAttraversoNativeSql(cdServiceInstance, genereServiceInstance);
 
 			testCascadeAllDisaster(cdServiceInstance, genereServiceInstance);
 
@@ -196,38 +201,6 @@ public class MyTest {
 		System.out.println(".......testCreazioneECollegamentoCdInUnSoloColpo fine: PASSED.............");
 	}
 
-	private static void testRimozioneCdECheckGeneri(CdService cdServiceInstance, GenereService genereServiceInstance)
-			throws Exception {
-		System.out.println(".......testRimozioneCdECheckGeneri inizio.............");
-
-		// creo un cd e due generi
-		long nowInMillisecondi = new Date().getTime();
-		Cd cdInstanceX = new Cd("titolo" + nowInMillisecondi, "autore" + nowInMillisecondi,
-				new SimpleDateFormat("dd/MM/yyyy").parse("10/08/2020"));
-		cdServiceInstance.inserisciNuovo(cdInstanceX);
-		Genere genere1 = new Genere("genere" + nowInMillisecondi);
-		genereServiceInstance.inserisciNuovo(genere1);
-		Genere genere2 = new Genere("genere" + nowInMillisecondi + 1);
-		genereServiceInstance.inserisciNuovo(genere2);
-		cdServiceInstance.aggiungiGenere(cdInstanceX, genere1);
-		cdServiceInstance.aggiungiGenere(cdInstanceX, genere2);
-
-		// ricarico eager per forzare il test
-		Cd cdReloaded = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());
-		if (cdReloaded.getGeneri().size() != 2)
-			throw new RuntimeException("testRimozioneCdECheckGeneri fallito: 2 generi e cd non collegati ");
-
-		// rimuovo
-		cdServiceInstance.rimuovi(cdReloaded.getId());
-
-		// ricarico
-		Cd cdSupposedToBeRemoved = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());
-		if (cdSupposedToBeRemoved != null)
-			throw new RuntimeException("testRimozioneCdECheckGeneri fallito: rimozione non avvenuta ");
-
-		System.out.println(".......testRimozioneCdECheckGeneri fine: PASSED.............");
-	}
-
 	private static void testEstraiListaDescrizioneGeneriAssociateAdUnCd(CdService cdServiceInstance,
 			GenereService genereServiceInstance) throws Exception {
 		System.out.println(".......testEstraiListaDescrizioneGeneriAssociateAdUnCd inizio.............");
@@ -271,6 +244,77 @@ public class MyTest {
 
 		System.out.println(".......testEstraiListaDescrizioneGeneriAssociateAdUnCd fine: PASSED.............");
 	}
+
+	private static void testRimozioneCdECheckGeneri(CdService cdServiceInstance, GenereService genereServiceInstance)
+			throws Exception {
+		System.out.println(".......testRimozioneCdECheckGeneri inizio.............");
+
+		// creo un cd e due generi
+		long nowInMillisecondi = new Date().getTime();
+		Cd cdInstanceX = new Cd("titolo" + nowInMillisecondi, "autore" + nowInMillisecondi,
+				new SimpleDateFormat("dd/MM/yyyy").parse("10/08/2020"));
+		cdServiceInstance.inserisciNuovo(cdInstanceX);
+		Genere genere1 = new Genere("genere" + nowInMillisecondi);
+		genereServiceInstance.inserisciNuovo(genere1);
+		Genere genere2 = new Genere("genere" + nowInMillisecondi + 1);
+		genereServiceInstance.inserisciNuovo(genere2);
+		cdServiceInstance.aggiungiGenere(cdInstanceX, genere1);
+		cdServiceInstance.aggiungiGenere(cdInstanceX, genere2);
+
+		// ricarico eager per forzare il test
+		Cd cdReloaded = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());
+		if (cdReloaded.getGeneri().size() != 2)
+			throw new RuntimeException("testRimozioneCdECheckGeneri fallito: 2 generi e cd non collegati ");
+
+		// rimuovo. Da notare che funziona anche se tolgo i cascade da Cd
+		// nel log troverò, infatti:
+		//Hibernate: delete from cd_genere where cd_id=?
+		//Hibernate: delete from cd where id=?
+		//cioè prima rimuove dalla tabella di legame e poi il cd vero e proprio
+		cdServiceInstance.rimuovi(cdReloaded.getId());
+
+		// ricarico
+		Cd cdSupposedToBeRemoved = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());
+		if (cdSupposedToBeRemoved != null)
+			throw new RuntimeException("testRimozioneCdECheckGeneri fallito: rimozione non avvenuta ");
+
+		System.out.println(".......testRimozioneCdECheckGeneri fine: PASSED.............");
+	}
+	
+	private static void testRimozioneCdECheckGeneriAttraversoNativeSql(CdService cdServiceInstance, GenereService genereServiceInstance)
+			throws Exception {
+		System.out.println(".......testRimozioneCdECheckGeneriAttraversoNativeSql inizio.............");
+
+		// creo un cd e due generi
+		long nowInMillisecondi = new Date().getTime();
+		Cd cdInstanceX = new Cd("titolo" + nowInMillisecondi, "autore" + nowInMillisecondi,
+				new SimpleDateFormat("dd/MM/yyyy").parse("10/08/2020"));
+		cdServiceInstance.inserisciNuovo(cdInstanceX);
+		Genere genere1 = new Genere("genere" + nowInMillisecondi);
+		genereServiceInstance.inserisciNuovo(genere1);
+		Genere genere2 = new Genere("genere" + nowInMillisecondi + 1);
+		genereServiceInstance.inserisciNuovo(genere2);
+		cdServiceInstance.aggiungiGenere(cdInstanceX, genere1);
+		cdServiceInstance.aggiungiGenere(cdInstanceX, genere2);
+
+		// ricarico eager per forzare il test
+		Cd cdReloaded = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());
+		if (cdReloaded.getGeneri().size() != 2)
+			throw new RuntimeException("testRimozioneCdECheckGeneriAttraversoNativeSql fallito: 2 generi e cd non collegati ");
+
+		// rimuovo. Da notare che nel log troverò:
+		//Hibernate: delete from cd_genere c where c.cd_id = ?
+		//Hibernate: delete from cd c where c.id = ?
+		cdServiceInstance.rimuoviMaPrimaScollegaGeneri(cdReloaded.getId());
+
+		// ricarico
+		Cd cdSupposedToBeRemoved = cdServiceInstance.caricaSingoloElementoEagerGeneri(cdInstanceX.getId());
+		if (cdSupposedToBeRemoved != null)
+			throw new RuntimeException("testRimozioneCdECheckGeneriAttraversoNativeSql fallito: rimozione non avvenuta ");
+
+		System.out.println(".......testRimozioneCdECheckGeneriAttraversoNativeSql fine: PASSED.............");
+	}
+	
 
 	private static void testCascadeAllDisaster(CdService cdServiceInstance, GenereService genereServiceInstance)
 			throws Exception {

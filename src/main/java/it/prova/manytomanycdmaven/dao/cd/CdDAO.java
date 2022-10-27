@@ -9,5 +9,6 @@ public interface CdDAO extends IBaseDAO<Cd>{
 	
 	public Cd findByIdFetchingGeneri(Long id) throws Exception;
 	public List<String> loadListaDescrizioneGeneriAssociateAdUnCd(Long idCdInput) throws Exception;
+	public void deleteCdAndUnlinkGeneri(Long idCdInput) throws Exception;
 
 }

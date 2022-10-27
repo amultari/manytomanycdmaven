@@ -153,6 +153,31 @@ public class CdServiceImpl implements CdService {
 	}
 
 	@Override
+	public void rimuoviMaPrimaScollegaGeneri(Long idCd) throws Exception {
+		// questo è come una connection
+		EntityManager entityManager = EntityManagerUtil.getEntityManager();
+
+		try {
+			// questo è come il MyConnection.getConnection()
+			entityManager.getTransaction().begin();
+
+			// uso l'injection per il dao
+			cdDAO.setEntityManager(entityManager);
+
+			// eseguo quello che realmente devo fare
+			cdDAO.deleteCdAndUnlinkGeneri(idCd);
+
+			entityManager.getTransaction().commit();
+		} catch (Exception e) {
+			entityManager.getTransaction().rollback();
+			e.printStackTrace();
+			throw e;
+		} finally {
+			EntityManagerUtil.closeEntityManager(entityManager);
+		}
+	}
+
+	@Override
 	public void aggiungiGenere(Cd cdInstance, Genere genereInstance) throws Exception {
 		// questo è come una connection
 		EntityManager entityManager = EntityManagerUtil.getEntityManager();
@@ -207,7 +232,8 @@ public class CdServiceImpl implements CdService {
 			cdTransientInstance.getGeneri().add(genereTransientInstance);
 
 			// ********************** IMPORTANTE ****************************
-			// se io rimuovo i cascade, non funziona più e si deve prima salvare il genere
+			// se io rimuovo i cascade dalla classe Cd, non funziona più e si deve prima
+			// salvare il genere
 			// (tramite genereDAO iniettando anch'esso) e poi
 			// sfruttare i metodi addTo o removeFrom dentro Cd:
 			// GenereDAO genereDAO = MyDaoFactory.getGenereDAOInstance();
@@ -218,7 +244,8 @@ public class CdServiceImpl implements CdService {
 			// inserirebbe duplicati, ma è logico
 			// ****************************************************************
 
-			// inserisco il cd
+			// inserisco il cd ed automaticamente inserisce anche i generi
+			// ma se tolgo i cascade non funziona: leggi commento in alto.
 			cdDAO.insert(cdTransientInstance);
 
 			entityManager.getTransaction().commit();
