@@ -66,4 +66,11 @@ public class CdDAOImpl implements CdDAO {
 		return query.getResultList();
 	}
 
+	@Override
+	public void deleteCdAndUnlinkGeneri(Long idCdInput) throws Exception {
+		entityManager.createNativeQuery("delete from cd_genere c where c.cd_id = ?1").setParameter(1, idCdInput)
+				.executeUpdate();
+		entityManager.createNativeQuery("delete from cd c where c.id = ?1").setParameter(1, idCdInput).executeUpdate();
+	}
+
 }
